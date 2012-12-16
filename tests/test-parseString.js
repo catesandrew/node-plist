@@ -1,26 +1,45 @@
 var plist = require('../');
-var assert = require('assert');
 
+exports.testString = function(test) {
+  plist.parseString('<string>Hello World!</string>', function(err, res) {
+    test.ifError(err);
+    test.equal(res, 'Hello World!');
+    test.done();
+  });
+}
 
-var gotResponse1 = false;
-plist.parseString("<string>Hello World!</string>", function(err, res) {
-  if (err) throw err;
-  gotResponse1 = true;
-  assert.equal(res, 'Hello World!');
-});
+exports.testParseStringSync = function(test) {
+  test.doesNotThrow(function(){
+    var res = plist.parseStringSync('<plist><dict><key>test</key><integer>101</integer></dict></plist>');
+    test.equal(Object.keys(res)[0], 'test');
+    test.equal(res.test, 101);
+    test.done();
+  });
+}
 
+exports.testParseStringSyncFailsOnInvalidXML = function(test) {
+  test.throws(function(){
+    var res = plist.parseStringSync('<string>Hello World!</string>');
+  });
+  test.done();
+}
 
-var gotResponse2 = false;
-plist.parseString("<plist><dict><key>test</key><integer>101</integer></dict></plist>", function(err, res) {
-  if (err) throw err;
-  gotResponse2 = true;
-  assert.ok(Array.isArray(res));
-  assert.equal(res.length, 1);
-  assert.equal(Object.keys(res[0])[0], 'test');
-  assert.equal(res[0].test, 101);
-});
+exports.testDict = function(test) {
+  plist.parseString('<plist><dict><key>test</key><integer>101</integer></dict></plist>', function(err, res) {
+    test.ifError(err);
+  
+    test.ok(Array.isArray(res));
+    test.equal(res.length, 1);
+    test.equal(Object.keys(res[0])[0], 'test');
+    test.equal(res[0].test, 101);
+    test.done();
+  });
+}
 
-
-process.on('exit', function() {
-  assert.ok(gotResponse1);
-});
+exports.testCDATA = function(test) {
+  plist.parseString('<string><![CDATA[Hello World!&lt;M]]></string>', function(err, res) {
+    test.ifError(err);
+    test.equal(res, 'Hello World!&lt;M');
+    test.done();
+  });
+}
